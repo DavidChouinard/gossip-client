@@ -21,7 +21,10 @@ RATE = 44100
 
 BUFFER_SIZE = 60;  # in seconds
 
-BUTTON_PIN = 21
+MAIN_BUTTON_PIN = 21
+UNDO_BUTTON_PIN = 5
+
+UNDO_LED_PIN = 23
 
 ROTARY_A_PIN = 27
 ROTARY_B_PIN = 23
@@ -41,8 +44,9 @@ strip = neopixel.Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED
 buffer = []
 
 GPIO.setmode(GPIO.BCM)
-GPIO.setup(BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-#GPIO.setup(LED_CHANNEL, GPIO.OUT)
+GPIO.setup(MAIN_BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(UNDO_BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(UNDO_LED_PIN, GPIO.OUT)
 
 time_marker_start = 0
 time_marker_size = 6
@@ -55,7 +59,9 @@ def main():
     global time_marker_start
     print("* recording")
 
-    GPIO.add_event_detect(BUTTON_PIN, GPIO.BOTH, callback=button_event)
+    GPIO.add_event_detect(MAIN_BUTTON_PIN, GPIO.BOTH, callback=button_event)
+
+    GPIO.output(UNDO_LED_PIN, False)
 
     encoder = gaugette.rotary_encoder.RotaryEncoder.Worker(ROTARY_A_PIN, ROTARY_B_PIN)
     encoder.start()
@@ -83,7 +89,7 @@ def main():
             buffer.append(data)
 
         delta = encoder.get_delta()
-        if delta != 0 and GPIO.input(BUTTON_PIN):
+        if delta != 0 and GPIO.input(MAIN_BUTTON_PIN):
             if time_marker_start + time_marker_size + delta > LED_COUNT:
                 time_marker_start = LED_COUNT - time_marker_size
             elif time_marker_start + delta < 0:
@@ -120,7 +126,7 @@ def button_pressed():
 def grow_marker_until_button_released():
     global time_marker_size
 
-    if not GPIO.input(BUTTON_PIN):
+    if not GPIO.input(MAIN_BUTTON_PIN):
         if time_marker_start + time_marker_size + 1 <= LED_COUNT:
             time_marker_size += 1
             threading.Timer(0.1, grow_marker_until_button_released).start()
@@ -138,11 +144,10 @@ def button_released():
     time_marker_start = 1
     time_marker_size = 6
 
-    threading.Thread(target=mail_snapshot, args=(snapshot,)).start()
-    #threading.Timer(0.1, theatreChase).start()
     threading.Thread(target=theaterChase, args=(neopixel.Color(0, 255, 239),), kwargs={'iterations': 5}).start()
+    threading.Thread(target=do_button_press_actions, args=(snapshot,)).start()
 
-def mail_snapshot(snapshot):
+def do_button_press_actions(snapshot):
 
     virtual_file = io.BytesIO('snippet')
     wf = wave.open(virtual_file, 'wb')
@@ -151,6 +156,22 @@ def mail_snapshot(snapshot):
     wf.setframerate(RATE)
     wf.writeframes(snapshot)
     wf.close()
+
+    GPIO.output(UNDO_LED_PIN, True)
+    for times in range(1, 101):
+        if not GPIO.input(UNDO_BUTTON_PIN):
+            print "undo pressed"
+            GPIO.output(UNDO_LED_PIN, False)
+            return  # undo button was pressed, don't save snippet
+
+        if times < 95:
+            time.sleep(0.1)
+        else:
+            GPIO.output(UNDO_LED_PIN, True)
+            time.sleep(0.1)
+
+            GPIO.output(UNDO_LED_PIN, False)
+            time.sleep(0.1)
 
 #    virtual_file.seek(0)
 #    requests.post(
