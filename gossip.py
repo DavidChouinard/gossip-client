@@ -2,6 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import io
+import os
+import sys
+import subprocess
 import requests
 import threading
 import time
@@ -9,6 +12,9 @@ import time
 import RPi.GPIO as GPIO
 import alsaaudio
 import wave
+
+import netifaces
+from scapy.all import sniff, Dot11
 
 import neopixel
 import gaugette.rotary_encoder
@@ -57,7 +63,12 @@ button_press_start = 0
 
 def main():
     global time_marker_start
-    print("* recording")
+
+    if "BASE_ID" not in os.environ:
+        sys.stderr.write("Error: unknown base station ID")
+        sys.exit(1)
+
+    start_sniffing_wifi_probes()
 
     GPIO.add_event_detect(MAIN_BUTTON_PIN, GPIO.BOTH, callback=button_event)
 
@@ -76,6 +87,8 @@ def main():
     strip.begin()
     # Startup animation
     threading.Thread(target=theaterChase, args=(neopixel.Color(0, 255, 239),)).start()
+
+    print("* recording")
 
     start = time.time()
     while True:
@@ -100,6 +113,30 @@ def main():
 
     stream.stop_stream()
     stream.close()
+
+def start_sniffing_wifi_probes():
+    if 'mon0' not in netifaces.interfaces():
+        result = subprocess.call(['iw', 'phy', 'phy0', 'interface', 'add', 'mon0', 'type', 'monitor'])
+        if result != 0:
+            sys.stderr.write("Warning: error in putting interface in monitor mode")
+
+    signal.signal(signal.SIGINT, stop_sniffing)
+    threading.Thread(target=sniff, kwargs={'iface': 'mon0', 'prn': packet_sniffed, 'stop_filter': keep_sniffing}).start()
+
+stop_sniff = False
+def keep_sniffing(_):
+    global stop_sniff
+    return stop_sniff
+
+def stop_sniffing(_):
+    global stop_sniff
+    stop_sniff = True
+
+def packet_sniffed(pkt):
+    if pkt.haslayer(Dot11) and pkt.type == 0 and pkt.subtype == 4:
+        print pkt.addr2
+        print (ord(pkt.notdecoded[-4:-3])-256)
+        #print pkt
 
 last_button_press = 0
 last_button_release = 0

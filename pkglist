@@ -6,8 +6,11 @@ build-essential
 libssl-dev
 libffi-dev
 python-dev
+libnl-dev
 python-pip
 libasound2-dev
 git
 scons
 swig
+iw
+ethtool
