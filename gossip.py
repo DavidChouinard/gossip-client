@@ -4,6 +4,8 @@
 import io
 import os
 import sys
+import socket
+import signal
 import subprocess
 import requests
 import threading
@@ -115,28 +117,34 @@ def main():
     stream.close()
 
 def start_sniffing_wifi_probes():
+    global my_mac_address
+    my_mac_address = netifaces.ifaddresses('wlan0')[netifaces.AF_LINK][0]['addr']
+
     if 'mon0' not in netifaces.interfaces():
         result = subprocess.call(['iw', 'phy', 'phy0', 'interface', 'add', 'mon0', 'type', 'monitor'])
         if result != 0:
             sys.stderr.write("Warning: error in putting interface in monitor mode")
 
     signal.signal(signal.SIGINT, stop_sniffing)
-    threading.Thread(target=sniff, kwargs={'iface': 'mon0', 'prn': packet_sniffed, 'stop_filter': keep_sniffing}).start()
+    threading.Thread(target=sniff, kwargs={'iface': 'mon0', 'prn': packet_sniffed, 'stop_filter': keep_sniffing, 'store': 0}).start()
 
 stop_sniff = False
 def keep_sniffing(_):
     global stop_sniff
     return stop_sniff
 
-def stop_sniffing(_):
+def stop_sniffing(_, __):
+    print "stop sniff!"
     global stop_sniff
     stop_sniff = True
+    exit(0)
 
 def packet_sniffed(pkt):
     if pkt.haslayer(Dot11) and pkt.type == 0 and pkt.subtype == 4:
-        print pkt.addr2
-        print (ord(pkt.notdecoded[-4:-3])-256)
-        #print pkt
+        mac = pkt.addr2
+        rssi = (ord(pkt.notdecoded[-4:-3])-256)
+        if my_mac_address != mac:
+            print mac, rssi
 
 last_button_press = 0
 last_button_release = 0

@@ -4,3 +4,4 @@ pyalsaaudio==0.8.2
 requests==2.7.0
 netifaces==0.10.4
 scapy==2.3.1
+python-nmap==0.4.1
