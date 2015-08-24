@@ -67,7 +67,7 @@ def main():
     global time_marker_start
 
     if "BASE_ID" not in os.environ:
-        sys.stderr.write("Error: unknown base station ID")
+        sys.stderr.write("Error: unknown base station ID\n")
         sys.exit(1)
 
     start_sniffing_wifi_probes()
@@ -78,6 +78,9 @@ def main():
 
     encoder = gaugette.rotary_encoder.RotaryEncoder.Worker(ROTARY_A_PIN, ROTARY_B_PIN)
     encoder.start()
+
+    mixer = alsaaudio.Mixer(control="Mic")
+    mixer.setvolume(90, 0, alsaaudio.PCM_CAPTURE)
 
     inp = alsaaudio.PCM(alsaaudio.PCM_CAPTURE)
 
@@ -118,15 +121,17 @@ def main():
 
 def start_sniffing_wifi_probes():
     global my_mac_address
-    my_mac_address = netifaces.ifaddresses('wlan0')[netifaces.AF_LINK][0]['addr']
 
     if 'mon0' not in netifaces.interfaces():
         result = subprocess.call(['iw', 'phy', 'phy0', 'interface', 'add', 'mon0', 'type', 'monitor'])
         if result != 0:
-            sys.stderr.write("Warning: error in putting interface in monitor mode")
+            sys.stderr.write("Warning: error in putting interface in monitor mode\n")
+
+    my_mac_address = netifaces.ifaddresses('wlan0')[netifaces.AF_LINK][0]['addr']
 
     signal.signal(signal.SIGINT, stop_sniffing)
-    threading.Thread(target=sniff, kwargs={'iface': 'mon0', 'prn': packet_sniffed, 'stop_filter': keep_sniffing, 'store': 0}).start()
+    #threading.Thread(target=sniff, kwargs={'iface': 'mon0', 'prn': packet_sniffed, 'stop_filter': keep_sniffing, 'store': 0}).start()
+    threading.Timer(0.5, sniff, [], {'iface': 'mon0', 'prn': packet_sniffed, 'stop_filter': keep_sniffing, 'store': 0}).start()
 
 stop_sniff = False
 def keep_sniffing(_):
@@ -134,7 +139,7 @@ def keep_sniffing(_):
     return stop_sniff
 
 def stop_sniffing(_, __):
-    print "stop sniff!"
+    print "* stopped sniffing"
     global stop_sniff
     stop_sniff = True
     exit(0)
@@ -205,8 +210,9 @@ def do_button_press_actions(snapshot):
     GPIO.output(UNDO_LED_PIN, True)
     for times in range(1, 101):
         if not GPIO.input(UNDO_BUTTON_PIN):
-            print "undo pressed"
+            print("* undo buffer catpure")
             GPIO.output(UNDO_LED_PIN, False)
+            buffer = []  # flush buffer
             return  # undo button was pressed, don't save snippet
 
         if times < 95:
@@ -232,7 +238,7 @@ def do_button_press_actions(snapshot):
 
     # save to disk just to be sure
     virtual_file.seek(0)
-    with open('/home/pi/gossip/snippets/' + str(int(time.time())) + '.wav','wb') as f:
+    with open('snippets/' + str(int(time.time())) + '.wav','wb') as f:
         f.write(virtual_file.read())
 
     print("* buffer sent")
