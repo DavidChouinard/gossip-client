@@ -5,8 +5,6 @@ import io
 import os
 import sys
 import socket
-import signal
-import subprocess
 import requests
 import threading
 import time
@@ -15,11 +13,10 @@ import RPi.GPIO as GPIO
 import alsaaudio
 import wave
 
-import netifaces
-from scapy.all import sniff, Dot11
-
 import neopixel
 import gaugette.rotary_encoder
+
+import networking
 
 #from pprint import pprint
 
@@ -70,7 +67,7 @@ def main():
         sys.stderr.write("Error: unknown base station ID\n")
         sys.exit(1)
 
-    start_sniffing_wifi_probes()
+    networking.start_sniffing_wifi_probes()
 
     GPIO.add_event_detect(MAIN_BUTTON_PIN, GPIO.BOTH, callback=button_event)
 
@@ -118,38 +115,6 @@ def main():
 
     stream.stop_stream()
     stream.close()
-
-def start_sniffing_wifi_probes():
-    global my_mac_address
-
-    if 'mon0' not in netifaces.interfaces():
-        result = subprocess.call(['iw', 'phy', 'phy0', 'interface', 'add', 'mon0', 'type', 'monitor'])
-        if result != 0:
-            sys.stderr.write("Warning: error in putting interface in monitor mode\n")
-
-    my_mac_address = netifaces.ifaddresses('wlan0')[netifaces.AF_LINK][0]['addr']
-
-    signal.signal(signal.SIGINT, stop_sniffing)
-    #threading.Thread(target=sniff, kwargs={'iface': 'mon0', 'prn': packet_sniffed, 'stop_filter': keep_sniffing, 'store': 0}).start()
-    threading.Timer(0.5, sniff, [], {'iface': 'mon0', 'prn': packet_sniffed, 'stop_filter': keep_sniffing, 'store': 0}).start()
-
-stop_sniff = False
-def keep_sniffing(_):
-    global stop_sniff
-    return stop_sniff
-
-def stop_sniffing(_, __):
-    print "* stopped sniffing"
-    global stop_sniff
-    stop_sniff = True
-    exit(0)
-
-def packet_sniffed(pkt):
-    if pkt.haslayer(Dot11) and pkt.type == 0 and pkt.subtype == 4:
-        mac = pkt.addr2
-        rssi = (ord(pkt.notdecoded[-4:-3])-256)
-        if my_mac_address != mac:
-            print mac, rssi
 
 last_button_press = 0
 last_button_release = 0
@@ -233,7 +198,7 @@ def do_button_press_actions(snapshot):
             headers={'Content-type': 'application/json', 'Accept': 'application/json'},
             json=payload, timeout=120)
 
-    print "uploaded snippet"
+    print("* uploaded snippet")
     print response.status_code
     print response.text
 
