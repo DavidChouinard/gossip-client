@@ -224,6 +224,19 @@ def do_button_press_actions(snapshot):
             GPIO.output(UNDO_LED_PIN, False)
             time.sleep(0.1)
 
+    virtual_file.seek(0)
+    data_uri = "data:audio/wav;base64,{0}".format(virtual_file.read().encode("base64").replace("\n", ""))
+    payload = {"base_id": os.environ["BASE_ID"], "audio": data_uri}
+
+    response = requests.post(
+            'http://gogossip.herokuapp.com/snippets',
+            headers={'Content-type': 'application/json', 'Accept': 'application/json'},
+            json=payload, timeout=120)
+
+    print "uploaded snippet"
+    print response.status_code
+    print response.text
+
 #    virtual_file.seek(0)
 #    requests.post(
 #            MAILGUN_ENDPOINT + '/messages',
@@ -234,7 +247,7 @@ def do_button_press_actions(snapshot):
 #                "subject": "🎤 Gossip saved!",
 #                "text": email_content(transcription) })
 
-    requests.get('http://apns-demo.herokuapp.com/')
+    #requests.get('http://apns-demo.herokuapp.com/')
 
     # save to disk just to be sure
     virtual_file.seek(0)
