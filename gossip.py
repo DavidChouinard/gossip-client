@@ -17,6 +17,7 @@ import neopixel
 import gaugette.rotary_encoder
 
 import networking
+import server
 
 #from pprint import pprint
 
@@ -67,7 +68,13 @@ def main():
         sys.stderr.write("Error: unknown base station ID\n")
         sys.exit(1)
 
-    networking.start_sniffing_wifi_probes()
+    #th = threading.Thread(target=networking.start_device_discovery)
+    #th.daemon = True
+    #th.start()
+
+    th = threading.Thread(target=server.start)
+    th.daemon = True
+    th.start()
 
     GPIO.add_event_detect(MAIN_BUTTON_PIN, GPIO.BOTH, callback=button_event)
 
@@ -191,7 +198,8 @@ def do_button_press_actions(snapshot):
 
     virtual_file.seek(0)
     data_uri = "data:audio/wav;base64,{0}".format(virtual_file.read().encode("base64").replace("\n", ""))
-    payload = {"base_id": os.environ["BASE_ID"], "audio": data_uri}
+    devices = networking.devices_in_proximity()
+    payload = {"base_id": os.environ["BASE_ID"], "audio": data_uri, "devices": devices}
 
     response = requests.post(
             'http://gogossip.herokuapp.com/snippets',

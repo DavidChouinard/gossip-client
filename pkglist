@@ -16,3 +16,5 @@ iw
 ethtool
 nmap
 tcpdump
+dnsutils
+avahi-utils
