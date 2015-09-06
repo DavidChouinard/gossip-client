@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <title></title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <link rel="stylesheet" href="/assets/normalize.css">
+        <link rel="stylesheet" href="/assets/main.css">
+    </head>
+    <body>
+        <p>Register your device</p>
+
+        <p>Gossip knows when you're around it and will email you snippets of conversations you were part of.</p>
+
+        {% if success is defined %}
+        <div class="alert alert-success" role="alert">{{ success }}</div>
+        {% endif %}
+
+        {% if error is defined %}
+        <div class="alert alert-danger" role="alert">{{ error }}</div>
+        {% endif %}
+
+        {% if hide_form is not defined %}
+        <form action="/" method="POST">
+            <div>
+                <label for="name">Name <em>optional</em></label>
+                <input type="text" id="name" name="name" placeholder="we love emojis 👯" />
+            </div>
+            <div>
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" placeholder="you@yourfancyemail.com" required/>
+            </div>
+
+            <div class="button">
+                <button type="submit">Submit</button>
+            </div>
+        </form>
+        {% endif %}
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+        <script>window.jQuery || document.write('<script src="js/vendor/jquery-1.11.3.min.js"><\/script>')</script>
+        <script src="/assets/main.js"></script>
+        </body>
+    </html>
