@@ -23,9 +23,9 @@ import server
 
 # Constants
 
-RATE = 44100
+RATE = 44100/2
 
-BUFFER_SIZE = 60;  # in seconds
+BUFFER_SIZE = 30;  # in seconds
 
 MAIN_BUTTON_PIN = 21
 UNDO_BUTTON_PIN = 5

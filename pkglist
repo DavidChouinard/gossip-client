@@ -8,6 +8,7 @@ libffi-dev
 python-dev
 libnl-dev
 python-pip
+python-setuptools
 libasound2-dev
 git
 scons

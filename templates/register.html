@@ -27,9 +27,15 @@
             <!-- play & pause by Jamison Wieser from the Noun Project -->
           </div>
           <div class="list-group-item-container">
-            <div class="list-group-item-text">yeah like right now with this one moment too much is too much nmda it's also not everythign i just this weekend i was with a group of people they carry called doesn't always catch cold hard cash and we went to this new york city alley nnnnn then drove up the driver came</div>
-            <div class="list-group-item-subtext">Thursday, June 30&ensp;•&ensp;you + 4 others</div>
-            <div class="list-group-item-wave"></div>
+              <div class="list-group-item-text">{{ snippet.transcription_html }}</div>
+            <div class="list-group-item-subtext">
+                <time class="timeago" datetime="{{ snippet.created_at }}">{{ format_date(snippet.created_at) }}</time>
+                &ensp;•&ensp;
+                you {% if snippet.device_count > 1 %}+ {{ snippet.device_count - 1 }} others{% else %}only{% endif %}
+            </div>
+            <div class="list-group-item-wave">
+                <img src="/assets/images/preloader.gif" alt="Loading" class="list-group-item-wave-preloader" />
+            </div>
           </div>
         </div>
         {% endfor %}
@@ -71,6 +77,7 @@
       <footer>Gossip is in β: we'd love to <a href="mailto:david@davidchouinard.com">hear from you</a>.</footer>
 
       <script src="/assets/js/jquery.min.js"></script>
+      <script src="/assets/js/jquery.timeago.js"></script>
       <script src="/assets/js/wavesurfer.min.js"></script>
       <script src="/assets/js/main.js"></script>
     </div>

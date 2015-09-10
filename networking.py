@@ -52,15 +52,8 @@ def packet_sniffed(pkt):
         mac = pkt.addr2
         rssi = (ord(pkt.notdecoded[-4:-3])-256)
         if my_mac_address != mac and rssi >= RSSI_THRESHOLD:
-            data = {'rssi': rssi, 'seen': int(time.time()), 'updated': int(time.time())}
-            if len(db.search(tinydb.where('mac') == mac)) >= 1:
-                db.update(data, tinydb.where('mac') == mac)
-            else:
-                data['mac'] = mac
-                data['vendor'] = netaddr.EUI(mac).oui.registration(0).org
-                db.insert(data)
-
-            pprint(devices_in_proximity())
+            data = {'rssi': rssi, 'mac': mac, 'seen': int(time.time()), 'updated': int(time.time())}
+            insert_or_update_device(data)
 
 def scan_network():
     print("* starting network scan for devices")
@@ -78,18 +71,8 @@ def scan_network():
             print hostname
             data["hostname"] = hostname
 
-        mac = nm[host]['addresses']['mac']
-        if len(db.search(tinydb.where('mac') == mac)) >= 1:
-            db.update(data, tinydb.where('mac') == mac)
-        else:
-            data['mac'] = mac
-
-            try:
-                data['vendor'] = netaddr.EUI(mac).oui.registration(0).org
-            except netaddr.NotRegisteredError:
-                pass
-
-            db.insert(data)
+        data['mac'] = nm[host]['addresses']['mac']
+        insert_or_update_device(data)
 
 def get_hostname(ip, fallback_hostnames):
     response = subprocess.check_output(["avahi-resolve", "--address", ip], stderr=DEVNULL)
@@ -105,7 +88,25 @@ def get_hostname(ip, fallback_hostnames):
     else:
         return None
 
-
 def devices_in_proximity():
-    devices = db.search(tinydb.where('seen') >= int(time.time()) - 60*15)
+    devices = db.search(tinydb.where('seen') >= int(time.time()) - 60*10)
     return map(lambda device: {k: v for k, v in device.items() if k in ['mac', 'vendor', 'hostname', 'useragent']}, devices)
+
+def get_cached_mac_from_ip(ip):
+    devices = db.search((tinydb.where('ip') == ip) & (tinydb.where('updated') >= int(time.time()) - 60*60))
+    if devices:
+        return devices[0]
+    else:
+        return None
+
+def insert_or_update_device(data):
+    if len(db.search(tinydb.where('mac') == data['mac'])) >= 1:
+        db.update(data, tinydb.where('mac') == data['mac'])
+    else:
+        try:
+            data['vendor'] = netaddr.EUI(mac).oui.registration(0).org
+        except netaddr.NotRegisteredError:
+            pass
+
+        db.insert(data)
+
