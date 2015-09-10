@@ -1,47 +1,78 @@
 <!DOCTYPE html>
 <html lang="">
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="x-ua-compatible" content="ie=edge">
-        <title></title>
-        <meta name="description" content="">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title></title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 
-        <link rel="stylesheet" href="/assets/normalize.css">
-        <link rel="stylesheet" href="/assets/main.css">
-    </head>
-    <body>
-        <p>Register your device</p>
+    <!--<link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">-->
 
-        <p>Gossip knows when you're around it and will email you snippets of conversations you were part of.</p>
+    <link rel="stylesheet" href="/assets/css/normalize.css">
+    <link rel="stylesheet" href="/assets/css/skeleton.css">
+    <link rel="stylesheet" href="/assets/css/main.css">
+  </head>
+  <body>
+    <div class="container">
 
-        {% if success is defined %}
-        <div class="alert alert-success" role="alert">{{ success }}</div>
-        {% endif %}
+      {% if snippets %}
+      <h4>Your conversations</h4>
+      <div class="list-group">
+        {% for snippet in snippets %}
+        <div class="list-group-item" data-audio-url="{{ snippet.audio }}">
+          <div class="list-group-item-icon">
+            <svg class="list-group-item-icon-play" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="5.167 19.667 50 50"><g><path d="M14.739,29.239c-8.521,8.521-8.521,22.335,0,30.855s22.335,8.521,30.855,0s8.521-22.335,0-30.855S23.259,20.719,14.739,29.239z M42.508,57.01c-6.816,6.815-17.868,6.815-24.684,0c-6.816-6.816-6.816-17.868,0-24.685c6.817-6.816,17.868-6.816,24.684,0S49.325,50.193,42.508,57.01z"/><g><path d="M22.53,35.94c0-1.2,0.869-1.725,1.931-1.166l16.866,8.877c1.062,0.559,1.062,1.473,0,2.032L24.461,54.56c-1.062,0.56-1.931,0.035-1.931-1.165V35.94z"/></g></g></svg>
+            <svg class="list-group-item-icon-pause" style="display: none;" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="35 35 50 50"><g><path d="M44.572,44.572c-8.521,8.521-8.521,22.335,0,30.855s22.335,8.521,30.855,0s8.521-22.335,0-30.855S53.093,36.052,44.572,44.572z M72.342,72.342c-6.816,6.816-17.868,6.816-24.684,0s-6.816-17.868,0-24.684c6.817-6.816,17.868-6.816,24.684,0C79.158,54.475,79.158,65.525,72.342,72.342z"/><path d="M56.182,50.182c0.603,0,1.091,0.489,1.091,1.091v17.455c0,0.603-0.489,1.091-1.091,1.091h-3.272c-0.603,0-1.091-0.488-1.091-1.091V51.273c0-0.603,0.488-1.091,1.091-1.091H56.182z"/><path d="M67.091,50.182c0.603,0,1.091,0.489,1.091,1.091v17.455c0,0.603-0.488,1.091-1.091,1.091h-3.272c-0.603,0-1.091-0.488-1.091-1.091V51.273c0-0.603,0.488-1.091,1.091-1.091H67.091z"/></g></svg>
+            <!-- play & pause by Jamison Wieser from the Noun Project -->
+          </div>
+          <div class="list-group-item-container">
+            <div class="list-group-item-text">yeah like right now with this one moment too much is too much nmda it's also not everythign i just this weekend i was with a group of people they carry called doesn't always catch cold hard cash and we went to this new york city alley nnnnn then drove up the driver came</div>
+            <div class="list-group-item-subtext">Thursday, June 30&ensp;•&ensp;you + 4 others</div>
+            <div class="list-group-item-wave"></div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
 
-        {% if error is defined %}
-        <div class="alert alert-danger" role="alert">{{ error }}</div>
-        {% endif %}
+      <div class="warning-lock">
+        <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 71 125" enable-background="new 0 0 71 100" xml:space="preserve"><path d="M65.5,45V30c0-16.542-13.458-30-30-30s-30,13.458-30,30v15H0v55h71V45H65.5z M13.5,30c0-12.131,9.869-22,22-22	s22,9.869,22,22v15h-44V30z"/></svg>
+        <!-- Lock by Edward Boatman from the Noun Project -->
+        Accesible only on this local network
+      </div>
+      {% endif %}
 
-        {% if hide_form is not defined %}
-        <form action="/" method="POST">
-            <div>
-                <label for="name">Name <em>optional</em></label>
-                <input type="text" id="name" name="name" placeholder="we love emojis 👯" />
-            </div>
-            <div>
-                <label for="email">Email</label>
-                <input type="email" id="email" name="email" placeholder="you@yourfancyemail.com" required/>
-            </div>
+      <div class="register-prompt">
+        <h2>New moments, in your inbox</h2>
 
-            <div class="button">
-                <button type="submit">Submit</button>
-            </div>
-        </form>
-        {% endif %}
+        <p>Gossip knows when you're around it: register to get your future conversation snippets instantly by email.</p>
+      </div>
 
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-        <script>window.jQuery || document.write('<script src="js/vendor/jquery-1.11.3.min.js"><\/script>')</script>
-        <script src="/assets/main.js"></script>
-        </body>
-    </html>
+      {% if success is defined %}
+      <div class="alert alert-success" role="alert"><strong>Success.</strong> {{ success }}</div>
+      {% endif %}
+
+      {% if error is defined %}
+      <div class="alert alert-danger" role="alert"><strong>Error</strong>: {{ error }}</div>
+      {% endif %}
+
+      {% if hide_form is not defined %}
+      <form action="/" method="POST" class="form-register">
+        <label for="name"><strong>Name</strong>&ensp;<em>optional</em></label>
+        <input class="u-full-width" type="text" id="name" name="name" placeholder="emojis loved 👌" {% if name is defined %}value="{{ name }}"{% endif %}>
+
+        <label for="email"><strong>Email</strong></label>
+        <input class="u-full-width" type="email" id="email" name="email" placeholder="you@yourfancyemail.com" required {% if email is defined %}value="{{ email }}"{% endif %}>
+
+        <button type="submit" class="button-primary">Submit</button>
+      </form>
+      {% endif %}
+
+      <footer>Gossip is in β: we'd love to <a href="mailto:david@davidchouinard.com">hear from you</a>.</footer>
+
+      <script src="/assets/js/jquery.min.js"></script>
+      <script src="/assets/js/wavesurfer.min.js"></script>
+      <script src="/assets/js/main.js"></script>
+    </div>
+  </body>
+</html>

@@ -3,7 +3,9 @@
 
 import bottle
 
+import os
 import subprocess
+import requests
 
 import re
 
@@ -19,9 +21,16 @@ def index():
     mac = get_mac_address(bottle.request.get('REMOTE_ADDR'))
 
     if mac is None:
-        return {'error': "Error: Can't detect your MAC address from this page. <br>I`m sorry: this is a beta product, message david@davidchouinard.com for help.", 'hide_form': True}
+        return {'error': "Can't detect your MAC address from this page. Sorry. This is a beta product, message david@davidchouinard.com for help.", 'hide_form': True}
     else:
-        return {'mac': mac}
+        r = requests.get('https://gogossip.herokuapp.com/devices/' + mac, params={"base_id": os.environ["BASE_ID"]}, headers={'Accept': 'application/json'})
+
+        if r.status_code == requests.codes.ok:
+            context = r.json()
+            context['snippets'] = get_snippets(mac)
+            return context
+        else:
+            return {}
 
 @bottle.post('/')
 @bottle.jinja2_view('register.html')
@@ -29,17 +38,31 @@ def register_device():
     mac = get_mac_address(bottle.request.get('REMOTE_ADDR'))
 
     if mac is None:
-        return {'error': "Error: Can't detect your MAC address from this page. <br>I`m sorry: this is a beta product, message david@davidchouinard.com for help."}
+        return {'error': "Can't detect your MAC address from this page. Sorry. This is a beta product, message david@davidchouinard.com for help.", 'hide_form': True}
 
-    name = bottle.request.forms.get('name')
-    email = bottle.request.forms.get('email')
+    data = {
+        'user':{'email': bottle.request.forms.getunicode('email'), 'name': bottle.request.forms.getunicode('name')},
+        'device': {'mac': mac, 'useragent': bottle.request.get('HTTP_USER_AGENT')}
+    }
 
-    print name, email
+    print data
 
-    if email is None:
+    if data['user']['email'] is None:
         return {'error': "Email is required"}
 
-    return {'success': "You'll get new snippets from now on 👻"}
+    r = requests.get('https://gogossip.herokuapp.com/devices', json=data, headers={'Accept': 'application/json'})
+
+    print r.text
+
+    if r.status_code == requests.codes.ok:
+        context = {'success': "You'll get new snippets from now on 👻"}
+        context.update(data['user'])
+        context['snippets'] = get_snippets(mac)
+        return context
+    else:
+        context = {'error': "Can't connect to server to register your device. Sorry. This is a beta product, message david@davidchouinard.com for help."}
+        context.update(data['user'])
+        return context
 
 @bottle.route('/assets/<path:path>')
 def static(path):
@@ -54,6 +77,14 @@ def get_mac_address(ip):
         return None
     else:
         return search.groups()[0]
+
+def get_snippets(mac):
+    r = requests.get('https://gogossip.herokuapp.com/snippets', params={"base_id": os.environ["BASE_ID"], "mac": mac}, headers={'Accept': 'application/json'})
+
+    if r.status_code == requests.codes.ok:
+        return r.json()
+    else:
+        return []
 
 def start():
     print("* starting server")

@@ -30,10 +30,12 @@ BUFFER_SIZE = 60;  # in seconds
 MAIN_BUTTON_PIN = 21
 UNDO_BUTTON_PIN = 5
 
-UNDO_LED_PIN = 23
+UNDO_LED_PIN = 11
 
 ROTARY_A_PIN = 27
 ROTARY_B_PIN = 23
+
+LOW_BATTERY_PIN = 6
 
 # Neopixel LED strip configuration:
 LED_COUNT      = 24      # Number of LED pixels.
@@ -52,6 +54,7 @@ buffer = []
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(MAIN_BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 GPIO.setup(UNDO_BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(LOW_BATTERY_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 GPIO.setup(UNDO_LED_PIN, GPIO.OUT)
 
 time_marker_start = 0
@@ -198,8 +201,12 @@ def do_button_press_actions(snapshot):
 
     virtual_file.seek(0)
     data_uri = "data:audio/wav;base64,{0}".format(virtual_file.read().encode("base64").replace("\n", ""))
-    devices = networking.devices_in_proximity()
+
+    #devices = networking.devices_in_proximity()
+    devices = [{"mac": "6c:40:08:8b:1b:cc"}]
+
     payload = {"base_id": os.environ["BASE_ID"], "audio": data_uri, "devices": devices}
+    # payload = {"base_id": os.environ["BASE_ID"], "audio": data_uri}
 
     response = requests.post(
             'http://gogossip.herokuapp.com/snippets',

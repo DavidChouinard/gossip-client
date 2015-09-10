@@ -108,4 +108,4 @@ def get_hostname(ip, fallback_hostnames):
 
 def devices_in_proximity():
     devices = db.search(tinydb.where('seen') >= int(time.time()) - 60*15)
-    return map(lambda device: {k: v for k, v in device.items() if k in ['mac', 'vendor', 'hostname']}, devices)
+    return map(lambda device: {k: v for k, v in device.items() if k in ['mac', 'vendor', 'hostname', 'useragent']}, devices)
