@@ -104,4 +104,4 @@ bottle.Jinja2Template.defaults['format_date'] = format_date
 
 def start():
     print("* starting server")
-    bottle.run(host='0.0.0.0', port=80)
+    bottle.run(host='0.0.0.0', port=80, server='cherrypy')

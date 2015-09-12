@@ -7,6 +7,7 @@ import socket
 
 import time
 import threading
+import retrying
 import tinydb
 
 import netifaces
@@ -24,7 +25,7 @@ db = tinydb.TinyDB('db/db.json')
 def start_device_discovery():
     global my_mac_address
 
-    scan_network()
+    # scan_network()
 
     if 'mon0' not in netifaces.interfaces():
         result = subprocess.call(['iw', 'phy', 'phy0', 'interface', 'add', 'mon0', 'type', 'monitor'])
@@ -53,6 +54,7 @@ def packet_sniffed(pkt):
         rssi = (ord(pkt.notdecoded[-4:-3])-256)
         if my_mac_address != mac and rssi >= RSSI_THRESHOLD:
             data = {'rssi': rssi, 'mac': mac, 'seen': int(time.time()), 'updated': int(time.time())}
+            print ("* captured probe: " + str(data))
             insert_or_update_device(data)
 
 def scan_network():
@@ -63,15 +65,14 @@ def scan_network():
     nm = nmap.PortScanner()
     nm.scan(hosts=str(cidr), arguments='-sn -n -e wlan0')
     for host in nm.all_hosts():
-        print nm[host]
         data = {'ip': nm[host]['addresses']['ipv4'], 'updated': int(time.time())}
 
         hostname = get_hostname(nm[host]['addresses']['ipv4'], nm[host]['hostnames'])
         if hostname is not None:
-            print hostname
             data["hostname"] = hostname
 
         data['mac'] = nm[host]['addresses']['mac']
+
         insert_or_update_device(data)
 
 def get_hostname(ip, fallback_hostnames):
@@ -95,7 +96,7 @@ def devices_in_proximity():
 def get_cached_mac_from_ip(ip):
     devices = db.search((tinydb.where('ip') == ip) & (tinydb.where('updated') >= int(time.time()) - 60*60))
     if devices:
-        return devices[0]
+        return devices[0]['mac']
     else:
         return None
 
@@ -104,7 +105,7 @@ def insert_or_update_device(data):
         db.update(data, tinydb.where('mac') == data['mac'])
     else:
         try:
-            data['vendor'] = netaddr.EUI(mac).oui.registration(0).org
+            data['vendor'] = netaddr.EUI(data['mac']).oui.registration(0).org
         except netaddr.NotRegisteredError:
             pass
 

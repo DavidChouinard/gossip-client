@@ -8,6 +8,7 @@ import socket
 import requests
 import threading
 import time
+import retrying
 
 import RPi.GPIO as GPIO
 import alsaaudio
@@ -202,46 +203,30 @@ def do_button_press_actions(snapshot):
     virtual_file.seek(0)
     data_uri = "data:audio/wav;base64,{0}".format(virtual_file.read().encode("base64").replace("\n", ""))
 
-    #devices = networking.devices_in_proximity()
-    devices = [{"mac": "6c:40:08:8b:1b:cc"}]
+    devices = networking.devices_in_proximity()
 
     payload = {"base_id": os.environ["BASE_ID"], "audio": data_uri, "devices": devices}
-    # payload = {"base_id": os.environ["BASE_ID"], "audio": data_uri}
 
+    upload_snippet(payload)
+
+    # save to disk just to be sure
+    # TODO: remove
+    virtual_file.seek(0)
+    with open('snippets/' + str(int(time.time())) + '.wav','wb') as f:
+        f.write(virtual_file.read())
+
+@retrying.retry(wait_exponential_multiplier=1000, stop_max_attempt_number=5)
+def upload_snippet(payload):
     response = requests.post(
             'http://gogossip.herokuapp.com/snippets',
             headers={'Content-type': 'application/json', 'Accept': 'application/json'},
             json=payload, timeout=120)
 
+    print(response.text)
+
+    response.raise_for_status()
+
     print("* uploaded snippet")
-    print response.status_code
-    print response.text
-
-#    virtual_file.seek(0)
-#    requests.post(
-#            MAILGUN_ENDPOINT + '/messages',
-#            auth=("api", MAILGUN_API_KEY),
-#            files=[("attachment", ("gossip.wav", virtual_file))],
-#            data={"from": "Gossip <david@davidchouinard.com>",
-#                "to": "chouichoui@me.com",
-#                "subject": "🎤 Gossip saved!",
-#                "text": email_content(transcription) })
-
-    #requests.get('http://apns-demo.herokuapp.com/')
-
-    # save to disk just to be sure
-    virtual_file.seek(0)
-    with open('snippets/' + str(int(time.time())) + '.wav','wb') as f:
-        f.write(virtual_file.read())
-
-    print("* buffer sent")
-
-def email_content(transcription):
-    if transcription['Status'] == 'OK':
-        text =  "\t" + transcription['NBest'][0]['ResultText']
-        text += " ({:.0%})".format(transcription['NBest'][0]['Confidence'])
-    else:
-        return ""
 
 def updateStrip():
     #print str(time_marker_start) + "-" + str(time_marker_size)

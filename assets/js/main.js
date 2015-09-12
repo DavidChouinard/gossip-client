@@ -30,10 +30,8 @@ $(document).ready(function() {
     $(this).find('.list-group-item-icon-pause').show();
     wavesurfers[$(this).index()].play();
 
-    console.log($(this).siblings());
-    $(this).siblings().find('.list-group-item-icon-play').hide();
-    $(this).siblings().find('.list-group-item-icon-pause').show();
-    wavesurfers[$(this).index()].play();
+    $(this).siblings().find('.list-group-item-icon-play').show();
+    $(this).siblings().find('.list-group-item-icon-pause').hide();
 
     for (i = 0; i < wavesurfers.length; i++) {
       if (i == $(this).index()) {
@@ -45,10 +43,12 @@ $(document).ready(function() {
 
   $('.list-group-item-icon-pause').on('click', function(e) {
     e.stopPropagation();
+    console.log("clicked pause");
 
     $(this).parent().find('.list-group-item-icon-play').show();
     $(this).hide();
 
+    console.log($(this).parent().parent().index());
     wavesurfers[$(this).parent().parent().index()].pause();
   });
 

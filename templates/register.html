@@ -17,7 +17,7 @@
     <div class="container">
 
       {% if snippets %}
-      <h4>Your conversations</h4>
+      <h4>Your recapped conversations</h4>
       <div class="list-group">
         {% for snippet in snippets %}
         <div class="list-group-item" data-audio-url="{{ snippet.audio }}">
@@ -49,9 +49,9 @@
       {% endif %}
 
       <div class="register-prompt">
-        <h2>New moments, in your inbox</h2>
+        <h2>Your recaps, in your inbox</h2>
 
-        <p>Gossip knows when you're around it: register to get your future conversation snippets instantly by email.</p>
+        <p>Recap knows when you're around it: get your conversation recaps instantly by email.</p>
       </div>
 
       {% if success is defined %}
@@ -74,7 +74,7 @@
       </form>
       {% endif %}
 
-      <footer>Gossip is in β: we'd love to <a href="mailto:david@davidchouinard.com">hear from you</a>.</footer>
+      <footer>Recap is in β: we'd love to <a href="mailto:david@davidchouinard.com">hear from you</a>.</footer>
 
       <script src="/assets/js/jquery.min.js"></script>
       <script src="/assets/js/jquery.timeago.js"></script>
