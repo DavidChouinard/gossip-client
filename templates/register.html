@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
-    <title></title>
+    <title>Recap: register your device</title>
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 
@@ -44,35 +44,48 @@
       <div class="warning-lock">
         <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 71 125" enable-background="new 0 0 71 100" xml:space="preserve"><path d="M65.5,45V30c0-16.542-13.458-30-30-30s-30,13.458-30,30v15H0v55h71V45H65.5z M13.5,30c0-12.131,9.869-22,22-22	s22,9.869,22,22v15h-44V30z"/></svg>
         <!-- Lock by Edward Boatman from the Noun Project -->
-        Accesible only on this local network
+        Recaps for this device
       </div>
       {% endif %}
 
-      <div class="register-prompt">
-        <h2>Your recaps, in your inbox</h2>
-
-        <p>Recap knows when you're around it: get your conversation recaps instantly by email.</p>
+      {% if is_registered is defined %}
+      <div class="alert alert-registered" role="alert">
+        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" viewBox="0 0 100 100" enable-background="new 0 0 100 100" xml:space="preserve"><path d="M50,100C22.43,100,0,77.57,0,49.999C0,22.43,22.43,0,50,0c27.569,0,50,22.43,50,49.999C100,77.57,77.57,100,50,100z   M50,9.235c-22.478,0-40.766,18.287-40.766,40.765c0,22.478,18.288,40.766,40.766,40.766s40.765-18.288,40.765-40.766  C90.765,27.521,72.479,9.235,50,9.235z"></path><path
+        d="M39.055,75.477c-1.417,0-2.775-0.562-3.777-1.565L21.889,60.523c-2.086-2.086-2.086-5.467,0-7.554  c2.086-2.085,5.468-2.085,7.554,0.001l9.612,9.612l31.503-31.503c2.086-2.086,5.467-2.086,7.554,0c2.086,2.086,2.086,5.467,0,7.553  l-35.279,35.28C41.83,74.914,40.471,75.477,39.055,75.477z"></path></svg>
+        Recaps for this device are sent to {{ email }} <a class="alert-action" href="#">edit</a>
       </div>
+      <div class="register" style="display: none">
 
-      {% if success is defined %}
-      <div class="alert alert-success" role="alert"><strong>Success.</strong> {{ success }}</div>
+      {% else %}
+      <div class="register">
       {% endif %}
 
-      {% if error is defined %}
-      <div class="alert alert-danger" role="alert"><strong>Error</strong>: {{ error }}</div>
-      {% endif %}
+        <div class="register-prompt">
+          <h2>Recaps, in your inbox</h2>
 
-      {% if hide_form is not defined %}
-      <form action="/" method="POST" class="form-register">
-        <label for="name"><strong>Name</strong>&ensp;<em>optional</em></label>
-        <input class="u-full-width" type="text" id="name" name="name" placeholder="emojis loved 👌" {% if name is defined %}value="{{ name }}"{% endif %}>
+          <p>Recap knows when you're around it: get your conversation recaps instantly by email.</p>
+        </div>
 
-        <label for="email"><strong>Email</strong></label>
-        <input class="u-full-width" type="email" id="email" name="email" placeholder="you@yourfancyemail.com" required {% if email is defined %}value="{{ email }}"{% endif %}>
+        {% if success is defined %}
+        <div class="alert alert-success" role="alert"><strong>Success.</strong> {{ success }}</div>
+        {% endif %}
 
-        <button type="submit" class="button-primary">Submit</button>
-      </form>
-      {% endif %}
+        {% if error is defined %}
+        <div class="alert alert-danger" role="alert"><strong>Error</strong>: {{ error }}</div>
+        {% endif %}
+
+        {% if hide_form is not defined %}
+        <form action="/" method="POST" class="form-register">
+          <label for="name"><strong>Name</strong>&ensp;<em>optional</em></label>
+          <input class="u-full-width" type="text" id="name" name="name" placeholder="emojis loved 👌" {% if name is defined %}value="{{ name }}"{% endif %}>
+
+          <label for="email"><strong>Email</strong></label>
+          <input class="u-full-width" type="email" id="email" name="email" placeholder="you@yourfancyemail.com" required {% if email is defined %}value="{{ email }}"{% endif %}>
+
+          <button type="submit" class="button-primary">Submit</button>
+        </form>
+        {% endif %}
+      </div>
 
       <footer>Recap is in β: we'd love to <a href="mailto:david@davidchouinard.com">hear from you</a>.</footer>
 

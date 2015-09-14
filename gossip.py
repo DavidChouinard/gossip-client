@@ -209,6 +209,7 @@ def do_button_press_actions(snapshot):
     data_uri = "data:audio/wav;base64,{0}".format(virtual_file.read().encode("base64").replace("\n", ""))
 
     devices = networking.devices_in_proximity()
+    print devices
 
     payload = {"base_id": os.environ["BASE_ID"], "audio": data_uri, "devices": devices}
 
@@ -227,7 +228,7 @@ def upload_snippet(payload):
             headers={'Content-type': 'application/json', 'Accept': 'application/json'},
             json=payload, timeout=120)
 
-    print(response.text)
+    #print(response.text)
 
     response.raise_for_status()
 

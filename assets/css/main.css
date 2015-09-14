@@ -99,6 +99,11 @@ select:focus {
  * Content
  */
 
+.container {
+  /* TODO: be more clever than this on desktop */
+  max-width: 450px;
+}
+
 .list-group {
   padding-left: 0;
 }
@@ -214,9 +219,37 @@ select:focus {
   border-color: #fff;
 }
 
+.alert-action {
+  text-transform: uppercase;
+  text-decoration: none;
+  font-weight: 600;
+  padding-left: 4px;
+  font-size: 1.2rem;
+  color: inherit;
+}
+
+.alert-action:focus,
+.alert-action:hover {
+  text-decoration: underline;
+  color: inherit;
+}
+
+.alert-registered {
+  color: #477958;
+  background-color: #DCF9E6;
+  margin-top: 30px;
+}
+.alert-registered > svg {
+  fill: #477958;
+  float: left;
+  width: 38px;
+  margin-right: 12px;
+  margin-top: 4px;
+}
+
 .alert-success {
   color: #3c763d;
-  background-color: #dff0d8;
+  background-color: #DCF9E6;
 }
 
 .alert-danger {

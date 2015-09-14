@@ -30,6 +30,7 @@ def index():
 
         if r.status_code >= 200 and r.status_code <= 299:
             context = r.json()
+            context['is_registered'] = True
             context['snippets'] = get_snippets(mac)
             return context
         else:
@@ -54,8 +55,9 @@ def register_device():
     r = requests.post('https://gogossip.herokuapp.com/devices', json=data, headers={'Accept': 'application/json'})
 
     if r.status_code >= 200 and r.status_code <= 299:
-        context = {'success': "You'll get new moments by email from now on 👻"}
+        context = r.json()
         context.update(data['user'])
+        context['is_registered'] = True
         context['snippets'] = get_snippets(mac)
         return context
     else:

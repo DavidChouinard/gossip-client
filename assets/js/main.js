@@ -52,4 +52,11 @@ $(document).ready(function() {
     wavesurfers[$(this).parent().parent().index()].pause();
   });
 
+  $('.alert-action').on('click', function(e) {
+    e.preventDefault();
+
+    $(this).parent().hide();
+    $(this).parent().next().slideDown('fast');
+  });
+
 });
