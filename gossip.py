@@ -7,6 +7,7 @@ import sys
 import socket
 import requests
 import threading
+import requests
 import time
 import retrying
 
@@ -20,9 +21,7 @@ import gaugette.rotary_encoder
 import networking
 import server
 
-#from pprint import pprint
-
-# Constants
+# CONSTANTS
 
 RATE = 44100/2
 
@@ -38,17 +37,19 @@ ROTARY_B_PIN = 23
 
 LOW_BATTERY_PIN = 6
 
-# Neopixel LED strip configuration:
-LED_COUNT      = 24      # Number of LED pixels.
-LED_PIN        = 18      # GPIO pin connected to the pixels (must support PWM!).
-LED_FREQ_HZ    = 800000  # LED signal frequency in hertz (usually 800khz)
-LED_DMA        = 5       # DMA channel to use for generating signal (try 5)
-LED_BRIGHTNESS = 255     # Set to 0 for darkest and 255 for brightest
-LED_INVERT     = False   # True to invert the signal (when using NPN transistor level shift
+# Neopixel LED strip configuration
+LED_COUNT      = 24
+LED_PIN        = 18
+LED_FREQ_HZ    = 800000
+LED_DMA        = 5
+LED_BRIGHTNESS = 255
+LED_INVERT     = False
+
+COLOR = neopixel.Color(255, 128, 8)
 
 strip = neopixel.Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS)
 
-# Setup
+# SETUP
 
 buffer = []
 
@@ -68,15 +69,23 @@ button_press_start = 0
 def main():
     global time_marker_start
 
+    if os.geteuid() != 0:
+        exit("You need to have root privileges to run this script: rerun it using 'sudo'. Exiting.")
+
     if "BASE_ID" not in os.environ:
         sys.stderr.write("Error: unknown base station ID\n")
         sys.exit(1)
 
-    #th = threading.Thread(target=networking.start_device_discovery)
-    #th.daemon = True
-    #th.start()
+    # Startup animation
+    strip.begin()
+    threading.Thread(target=theaterChaseAnimation).start()
+    #threading.Thread(target=bootupAnimation).start()
 
-    th = threading.Thread(target=server.start)
+    th = threading.Thread(target=networking.start_device_discovery)
+    th.daemon = True
+    th.start()
+
+    th = threading.Thread(target=server.start_server)
     th.daemon = True
     th.start()
 
@@ -97,11 +106,7 @@ def main():
     inp.setformat(alsaaudio.PCM_FORMAT_S16_LE)
     inp.setperiodsize(160)
 
-    strip.begin()
-    # Startup animation
-    threading.Thread(target=theaterChase, args=(neopixel.Color(0, 255, 239),)).start()
-
-    print("* recording")
+    print("* starting recording")
 
     start = time.time()
     while True:
@@ -114,15 +119,15 @@ def main():
         if l:
             buffer.append(data)
 
-        delta = encoder.get_delta()
-        if delta != 0 and GPIO.input(MAIN_BUTTON_PIN):
-            if time_marker_start + time_marker_size + delta > LED_COUNT:
-                time_marker_start = LED_COUNT - time_marker_size
-            elif time_marker_start + delta < 0:
-                time_marker_start = 0
-            else:
-                time_marker_start += delta
-            updateStrip()
+        #delta = encoder.get_delta()
+        #if delta != 0 and GPIO.input(MAIN_BUTTON_PIN):
+        #    if time_marker_start + time_marker_size + delta > LED_COUNT:
+        #        time_marker_start = LED_COUNT - time_marker_size
+        #    elif time_marker_start + delta < 0:
+        #        time_marker_start = 0
+        #    else:
+        #        time_marker_start += delta
+        #    updateStrip()
 
     stream.stop_stream()
     stream.close()
@@ -170,7 +175,7 @@ def button_released():
     time_marker_start = 1
     time_marker_size = 6
 
-    threading.Thread(target=theaterChase, args=(neopixel.Color(0, 255, 239),), kwargs={'iterations': 5}).start()
+    threading.Thread(target=theaterChaseAnimation).start()
     threading.Thread(target=do_button_press_actions, args=(snapshot,)).start()
 
 def do_button_press_actions(snapshot):
@@ -232,26 +237,58 @@ def updateStrip():
     #print str(time_marker_start) + "-" + str(time_marker_size)
     for n in range(0, strip.numPixels()):
         if n >= time_marker_start and n < time_marker_start + time_marker_size:
-		    strip.setPixelColor(n, neopixel.Color(0, 255, 239))
+		    strip.setPixelColor(n, COLOR)
         else:
 		    strip.setPixelColor(n, 0)
 
     strip.show()
 
-def theaterChase(color, wait_ms=50, iterations=20):
+def bootupAnimation():
+    for i in range(0, strip.numPixels()/2 + 1):
+        print i, strip.numPixels() - i
+
+        strip.setPixelColor(i, COLOR)
+        strip.setPixelColor(strip.numPixels() - i, COLOR)
+        strip.show()
+        time.sleep(200/1000.0)
+
+    time.sleep(500/1000.0)
+
+    fadeoutStrip()
+    #for _ in range(5):
+    #    time.sleep(100/1000.0)
+    #    for i in range(strip.numPixels()):
+    #        strip.setPixelColor(strip.numPixels() - i, COLOR)
+    #    strip.show()
+    #    time.sleep(100/1000.0)
+    #    eraseStrip()
+
+def wheel(pos):
+    """Generate rainbow colors across 0-255 positions."""
+    if pos < 85:
+        return neopixel.Color(pos * 3, 255 - pos * 3, 0)
+    elif pos < 170:
+        pos -= 85
+        return neopixel.Color(255 - pos * 3, 0, pos * 3)
+    else:
+        pos -= 170
+        return neopixel.Color(0, pos * 3, 255 - pos * 3)
+
+def theaterChaseAnimation(wait_ms=50, iterations=5):
 	"""Movie theater light style chaser animation."""
 	for j in range(iterations):
 		for q in range(3):
 			for i in range(0, strip.numPixels(), 3):
-				strip.setPixelColor(i+q, color)
+				strip.setPixelColor(i+q, COLOR)
 			strip.show()
 			time.sleep(wait_ms/1000.0)
 			for i in range(0, strip.numPixels(), 3):
 				strip.setPixelColor(i+q, 0)
 
 	eraseStrip()
+	exit(0)
 
-def fadeoutStrip(iterations=50):
+def fadeoutStrip(iterations=5):
     colors = [strip.getPixelColor(n) for n in range(strip.numPixels())]
     start = [[(color >> 16) & 0xff, (color >> 8) & 0xff, color & 0xff] for color in colors]
     for i in range(1, iterations + 1):
@@ -270,6 +307,7 @@ def eraseStrip():
     for i in range(strip.numPixels()):
         strip.setPixelColor(i, 0)
     strip.show()
+
 
 if __name__ == "__main__":
     main()

@@ -102,6 +102,6 @@ def format_date(isodate):
 
 bottle.Jinja2Template.defaults['format_date'] = format_date
 
-def start():
+def start_server():
     print("* starting server")
     bottle.run(host='0.0.0.0', port=80, server='cherrypy')
