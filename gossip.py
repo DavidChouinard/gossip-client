@@ -78,7 +78,7 @@ def main():
 
     # Startup animation
     strip.begin()
-    threading.Thread(target=theaterChaseAnimation).start()
+    theaterChaseAnimation(exit=False)
     #threading.Thread(target=bootupAnimation).start()
 
     th = threading.Thread(target=networking.start_device_discovery)
@@ -209,7 +209,6 @@ def do_button_press_actions(snapshot):
     data_uri = "data:audio/wav;base64,{0}".format(virtual_file.read().encode("base64").replace("\n", ""))
 
     devices = networking.devices_in_proximity()
-    print devices
 
     payload = {"base_id": os.environ["BASE_ID"], "audio": data_uri, "devices": devices}
 
@@ -275,7 +274,7 @@ def wheel(pos):
         pos -= 170
         return neopixel.Color(0, pos * 3, 255 - pos * 3)
 
-def theaterChaseAnimation(wait_ms=50, iterations=5):
+def theaterChaseAnimation(wait_ms=50, iterations=5, exit=True):
 	"""Movie theater light style chaser animation."""
 	for j in range(iterations):
 		for q in range(3):
@@ -287,7 +286,9 @@ def theaterChaseAnimation(wait_ms=50, iterations=5):
 				strip.setPixelColor(i+q, 0)
 
 	eraseStrip()
-	exit(0)
+
+	if exit:
+		exit(0)
 
 def fadeoutStrip(iterations=5):
     colors = [strip.getPixelColor(n) for n in range(strip.numPixels())]

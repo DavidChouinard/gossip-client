@@ -32,6 +32,7 @@ def start_device_discovery():
         my_mac.append(get_interface_mac('wlan1'))
 
         #scan_network('wlan1')
+        threading.Thread(target=scan_network, args=('wlan1',)).start()
         start_sniffing('wlan0')
 
     #threading.Thread(target=sniff, kwargs={'iface': 'mon0', 'prn': packet_sniffed, 'stop_filter': keep_sniffing, 'store': 0}).start()
@@ -71,7 +72,7 @@ def packet_sniffed(pkt):
         mac = pkt.addr2
         rssi = (ord(pkt.notdecoded[-4:-3])-256)
         if mac not in my_mac and rssi >= RSSI_THRESHOLD:
-            data = {'rssi': rssi, 'mac': mac, 'seen': int(time.time()), 'updated': int(time.time())}
+            data = {'rssi': rssi, 'mac': mac, 'seen': int(time.time())}
             print ("* captured probe: " + str(data))
             insert_or_update_device(data)
 
@@ -83,15 +84,19 @@ def scan_network(interface):
     nm = nmap.PortScanner()
     nm.scan(hosts=str(cidr), arguments='-sn -n -e ' + interface)
     for host in nm.all_hosts():
-        data = {'ip': nm[host]['addresses']['ipv4'], 'updated': int(time.time())}
+        data = {'ip': nm[host]['addresses']['ipv4'], 'mac': nm[host]['addresses']['mac']}
 
         hostname = get_hostname(nm[host]['addresses']['ipv4'], nm[host]['hostnames'])
         if hostname is not None:
             data["hostname"] = hostname
-
-        data['mac'] = nm[host]['addresses']['mac']
+            print("* found hostname " + str(data))
 
         insert_or_update_device(data)
+
+    # scan again at some random time tomorrow
+    interval = random.randrange(12*60*60, 36*60*60)
+    threading.Timer(interval, scan_network, [interface]).start()
+
 
 def get_hostname(ip, fallback_hostnames):
     response = subprocess.check_output(["avahi-resolve", "--address", ip], stderr=DEVNULL)
@@ -119,6 +124,8 @@ def get_cached_mac_from_ip(ip):
         return None
 
 def insert_or_update_device(data):
+    data['updated'] = int(time.time())
+
     if len(db.search(tinydb.where('mac') == data['mac'])) >= 1:
         db.update(data, tinydb.where('mac') == data['mac'])
     else:
