@@ -9,11 +9,11 @@ git fetch
 newUpdatesAvailable=`git diff HEAD FETCH_HEAD`
 if [ "$newUpdatesAvailable" != "" ]
 then
-        service gossip stop
+        service recap stop
 
         git merge FETCH_HEAD
 
-        service gossip start
+        service recap start
 
         xargs apt-get install -y < "pkglist"
 
