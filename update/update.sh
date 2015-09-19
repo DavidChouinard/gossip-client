@@ -15,16 +15,20 @@ then
 
         service recap start
 
+        echo "--> installing new required system packages"
+
         xargs apt-get install -y < "pkglist"
+
+        echo "--> installing new required python modules"
 
         pip install -r "requirements.txt"
 
-        echo "latest update installed"
+        echo "--> latest update installed"
 
         if [ -e "update/post-update.sh" ]
         then
             . "update/post-update.sh"
         fi
 else
-        echo "no updates available"
+        echo "--> no updates available"
 fi
