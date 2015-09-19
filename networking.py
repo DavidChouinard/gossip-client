@@ -31,11 +31,8 @@ def start_device_discovery():
     if 'wlan1' in netifaces.interfaces():
         my_mac.append(get_interface_mac('wlan1'))
 
-        #scan_network('wlan1')
         threading.Thread(target=scan_network, args=('wlan1',)).start()
         start_sniffing('wlan0')
-
-    #threading.Thread(target=sniff, kwargs={'iface': 'mon0', 'prn': packet_sniffed, 'stop_filter': keep_sniffing, 'store': 0}).start()
 
 def get_interface_mac(interface):
     return netifaces.ifaddresses(interface)[netifaces.AF_LINK][0]['addr']
@@ -47,7 +44,7 @@ def start_sniffing(interface):
 
     assert(result == 0)
 
-    threading.Timer(0.5, sniff, [], {'iface': 'wlan0', 'prn': packet_sniffed, 'stop_filter': keep_sniffing, 'store': 0}).start()
+    threading.Timer(4.0, sniff, [], {'iface': 'wlan0', 'prn': packet_sniffed, 'stop_filter': keep_sniffing, 'store': 0}).start()
     threading.Thread(target=channel_hopper, args=('wlan0',)).start()
 
 stop_sniff = False

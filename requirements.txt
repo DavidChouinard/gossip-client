@@ -10,3 +10,4 @@ netaddr
 bottle
 python-dateutil
 retrying
+cherrypy
