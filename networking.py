@@ -75,7 +75,15 @@ def packet_sniffed(pkt):
 
 def scan_network(interface):
     print("* starting network scan for devices")
-    ipinfo = netifaces.ifaddresses(interface)[socket.AF_INET][0]
+
+    ifaces = netifaces.ifaddresses(interface)
+
+    if socket.AF_INET not in ifaces:
+        # we don't have an IP address, try again in an hour
+        threading.Timer(60*60, scan_network, [interface]).start()
+        return
+
+    ipinfo = ifaces[socket.AF_INET][0]
     cidr = netaddr.IPNetwork('%s/%s' % (ipinfo['addr'], ipinfo['netmask']))
 
     nm = nmap.PortScanner()
