@@ -13,13 +13,14 @@ then
 
         git merge FETCH_HEAD
 
-        service recap start
-
+        apt-get update && apt-get upgrade
         xargs apt-get install -y < "pkglist"
 
         pip install -r "requirements.txt"
 
         echo "latest update installed"
+
+        service recap start
 
         if [ -e "update/post-update.sh" ]
         then

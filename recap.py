@@ -21,6 +21,8 @@ import gaugette.rotary_encoder
 import networking
 import server
 
+from setproctitle import setproctitle
+
 # CONSTANTS
 
 RATE = 44100/2
@@ -59,6 +61,9 @@ GPIO.setup(UNDO_BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 GPIO.setup(LOW_BATTERY_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 GPIO.setup(UNDO_LED_PIN, GPIO.OUT)
 
+# this fails arbitrarly hours or days out...
+#GPIO.add_event_detect(MAIN_BUTTON_PIN, GPIO.BOTH, callback=button_event)
+
 time_marker_start = 0
 time_marker_size = 6
 
@@ -76,9 +81,12 @@ def main():
         sys.stderr.write("Error: unknown base station ID\n")
         sys.exit(1)
 
+    setproctitle("recap")
+
     # Startup animation
     strip.begin()
-    theaterChaseAnimation(exit=False)
+    theaterChaseAnimation()
+    #theaterChaseAnimation(exit=False)
     #threading.Thread(target=bootupAnimation).start()
 
     th = threading.Thread(target=networking.start_device_discovery)
@@ -88,8 +96,6 @@ def main():
     th = threading.Thread(target=server.start_server)
     th.daemon = True
     th.start()
-
-    GPIO.add_event_detect(MAIN_BUTTON_PIN, GPIO.BOTH, callback=button_event)
 
     GPIO.output(UNDO_LED_PIN, False)
 
@@ -109,6 +115,7 @@ def main():
     print("* starting recording")
 
     start = time.time()
+    last_button_press = 0
     while True:
         if (len(buffer) > int(RATE / 920 * BUFFER_SIZE)):
             # print time.time() - start
@@ -118,6 +125,15 @@ def main():
 
         if l:
             buffer.append(data)
+
+        if not GPIO.input(MAIN_BUTTON_PIN) and time.clock() - last_button_press > 0.1:
+            print("* button pressed")
+
+            last_button_press = time.clock()
+            snapshot = b''.join(buffer)
+
+            threading.Thread(target=theaterChaseAnimation).start()
+            threading.Thread(target=do_button_press_actions, args=(snapshot,)).start()
 
         #delta = encoder.get_delta()
         #if delta != 0 and GPIO.input(MAIN_BUTTON_PIN):
@@ -274,7 +290,7 @@ def wheel(pos):
         pos -= 170
         return neopixel.Color(0, pos * 3, 255 - pos * 3)
 
-def theaterChaseAnimation(wait_ms=50, iterations=5, exit=True):
+def theaterChaseAnimation(wait_ms=50, iterations=5):
 	"""Movie theater light style chaser animation."""
 	for j in range(iterations):
 		for q in range(3):
@@ -286,9 +302,6 @@ def theaterChaseAnimation(wait_ms=50, iterations=5, exit=True):
 				strip.setPixelColor(i+q, 0)
 
 	eraseStrip()
-
-	if exit:
-		exit(0)
 
 def fadeoutStrip(iterations=5):
     colors = [strip.getPixelColor(n) for n in range(strip.numPixels())]
