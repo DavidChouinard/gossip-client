@@ -14,11 +14,16 @@ then
         git merge FETCH_HEAD
 
         apt-get update && apt-get upgrade
+
+        echo "---> installing new required system packages"
+
         xargs apt-get install -y < "pkglist"
+
+        echo "---> installing new required python modules"
 
         pip install -r "requirements.txt"
 
-        echo "latest update installed"
+        echo "---> latest update installed"
 
         service recap start
 
@@ -27,5 +32,5 @@ then
             . "update/post-update.sh"
         fi
 else
-        echo "no updates available"
+        echo "---> no updates available"
 fi
