@@ -10,4 +10,5 @@ netaddr
 bottle
 python-dateutil
 retrying
+jinja2
 cherrypy
