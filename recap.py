@@ -231,15 +231,14 @@ def do_button_press_actions(snapshot):
     upload_snippet(payload)
 
     # save to disk just to be sure
-    # TODO: remove
-    virtual_file.seek(0)
-    with open('snippets/' + str(int(time.time())) + '.wav','wb') as f:
-        f.write(virtual_file.read())
+    #virtual_file.seek(0)
+    #with open('snippets/' + str(int(time.time())) + '.wav','wb') as f:
+    #    f.write(virtual_file.read())
 
 @retrying.retry(wait_exponential_multiplier=1000, stop_max_attempt_number=5)
 def upload_snippet(payload):
     response = requests.post(
-            'http://gogossip.herokuapp.com/snippets',
+            'https://getrecap.herokuapp.com/snippets',
             headers={'Content-type': 'application/json', 'Accept': 'application/json'},
             json=payload, timeout=120)
 

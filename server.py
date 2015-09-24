@@ -26,7 +26,7 @@ def index():
     if mac is None:
         return {'error': "Can't detect your MAC address from this page. Sorry. This is a beta product, message david@davidchouinard.com for help.", 'hide_form': True}
     else:
-        r = requests.get('https://gogossip.herokuapp.com/devices/' + mac, params={"base_id": os.environ["BASE_ID"]}, headers={'Accept': 'application/json'})
+        r = requests.get('https://getrecap.herokuapp.com/devices/' + mac, params={"base_id": os.environ["BASE_ID"]}, headers={'Accept': 'application/json'})
 
         if r.status_code >= 200 and r.status_code <= 299:
             context = r.json()
@@ -52,7 +52,7 @@ def register_device():
     if data['user']['email'] is None:
         return {'error': "Email is required"}
 
-    r = requests.post('https://gogossip.herokuapp.com/devices', json=data, headers={'Accept': 'application/json'})
+    r = requests.post('https://getrecap.herokuapp.com/devices', json=data, headers={'Accept': 'application/json'})
 
     if r.status_code >= 200 and r.status_code <= 299:
         context = r.json()
@@ -86,7 +86,7 @@ def get_mac_address(ip):
         return mac
 
 def get_snippets(mac):
-    r = requests.get('https://gogossip.herokuapp.com/snippets', params={"base_id": os.environ["BASE_ID"], "mac": mac}, headers={'Accept': 'application/json'})
+    r = requests.get('https://getrecap.herokuapp.com/snippets', params={"base_id": os.environ["BASE_ID"], "mac": mac}, headers={'Accept': 'application/json'})
 
     if r.status_code >= 200 and r.status_code <= 299:
         data = r.json()
