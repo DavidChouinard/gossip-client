@@ -12,3 +12,4 @@ python-dateutil
 retrying
 jinja2
 cherrypy
+setproctitle

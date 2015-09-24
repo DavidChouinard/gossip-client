@@ -19,3 +19,4 @@ nmap
 tcpdump
 dnsutils
 avahi-utils
+lsb-core

@@ -27,7 +27,7 @@
             <!-- play & pause by Jamison Wieser from the Noun Project -->
           </div>
           <div class="list-group-item-container">
-              <div class="list-group-item-text">{{ snippet.transcription_html }}</div>
+              <div class="list-group-item-text list-group-item-autowrap">{{ snippet.transcription_html }}</div>
             <div class="list-group-item-subtext">
                 <time class="timeago" datetime="{{ snippet.created_at }}">{{ format_date(snippet.created_at) }}</time>
                 &ensp;•&ensp;
@@ -87,7 +87,7 @@
         {% endif %}
       </div>
 
-      <footer>Recap is in β: we'd love to <a href="mailto:david@davidchouinard.com">hear from you</a>.</footer>
+      <footer>Recap is in β: we'd love to <a href="mailto:david@davidchouinard.com">hear from you</a></footer>
 
       <script src="/assets/js/jquery.min.js"></script>
       <script src="/assets/js/jquery.timeago.js"></script>
