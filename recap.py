@@ -137,6 +137,8 @@ def main():
                 threading.Thread(target=theaterChaseAnimation).start()
                 threading.Thread(target=do_button_press_actions, args=(snapshot,)).start()
 
+            time.sleep(0.1)
+
             #delta = encoder.get_delta()
             #if delta != 0 and GPIO.input(MAIN_BUTTON_PIN):
             #    if time_marker_start + time_marker_size + delta > LED_COUNT:
