@@ -12,6 +12,7 @@ import time
 import retrying
 
 import RPi.GPIO as GPIO
+import wave
 
 import neopixel
 import gaugette.rotary_encoder

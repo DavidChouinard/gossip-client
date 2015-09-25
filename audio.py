@@ -1,6 +1,5 @@
 
 import alsaaudio
-import wave
 
 RATE = 44100/2
 
