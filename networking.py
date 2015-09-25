@@ -90,7 +90,7 @@ def scan_network(interface):
     nm = nmap.PortScanner()
     nm.scan(hosts=str(cidr), arguments='-sn -n -e ' + interface)
     for host in nm.all_hosts():
-        data = {'ip': nm[host]['addresses']['ipv4'], 'mac': nm[host]['addresses']['mac']}
+        data = {'ip': nm[host]['addresses']['ipv4'], 'mac': nm[host]['addresses']['mac'].lower()}
 
         hostname = get_hostname(nm[host]['addresses']['ipv4'], nm[host]['hostnames'])
         if hostname is not None:
@@ -133,6 +133,7 @@ def get_cached_mac_from_ip(ip):
 
 def insert_or_update_device(data):
     data['updated'] = int(time.time())
+    data['mac'] = data['mac'].lower()
 
     if len(db.search(tinydb.where('mac') == data['mac'])) >= 1:
         db.update(data, tinydb.where('mac') == data['mac'])
