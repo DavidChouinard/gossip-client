@@ -116,34 +116,40 @@ def main():
 
     start = time.time()
     last_button_press = 0
-    while True:
-        if (len(buffer) > int(RATE / 920 * BUFFER_SIZE)):
-            # print time.time() - start
-            buffer.pop(0);
 
-        l, data = inp.read()
+    try:
+        while True:
+            if (len(buffer) > int(RATE / 920 * BUFFER_SIZE)):
+                # print time.time() - start
+                buffer.pop(0);
 
-        if l:
-            buffer.append(data)
+            l, data = inp.read()
 
-        if not GPIO.input(MAIN_BUTTON_PIN) and time.clock() - last_button_press > 0.1:
-            print("* button pressed")
+            if l:
+                buffer.append(data)
 
-            last_button_press = time.clock()
-            snapshot = b''.join(buffer)
+            if not GPIO.input(MAIN_BUTTON_PIN) and time.clock() - last_button_press > 0.1:
+                print("* button pressed")
 
-            threading.Thread(target=theaterChaseAnimation).start()
-            threading.Thread(target=do_button_press_actions, args=(snapshot,)).start()
+                last_button_press = time.clock()
+                snapshot = b''.join(buffer)
 
-        #delta = encoder.get_delta()
-        #if delta != 0 and GPIO.input(MAIN_BUTTON_PIN):
-        #    if time_marker_start + time_marker_size + delta > LED_COUNT:
-        #        time_marker_start = LED_COUNT - time_marker_size
-        #    elif time_marker_start + delta < 0:
-        #        time_marker_start = 0
-        #    else:
-        #        time_marker_start += delta
-        #    updateStrip()
+                threading.Thread(target=theaterChaseAnimation).start()
+                threading.Thread(target=do_button_press_actions, args=(snapshot,)).start()
+
+            #delta = encoder.get_delta()
+            #if delta != 0 and GPIO.input(MAIN_BUTTON_PIN):
+            #    if time_marker_start + time_marker_size + delta > LED_COUNT:
+            #        time_marker_start = LED_COUNT - time_marker_size
+            #    elif time_marker_start + delta < 0:
+            #        time_marker_start = 0
+            #    else:
+            #        time_marker_start += delta
+            #    updateStrip()
+    except (KeyboardInterrupt, SystemExit):
+        raise
+    except Exception as e:
+        sys.stderr.write(str(e))
 
     stream.stop_stream()
     stream.close()
