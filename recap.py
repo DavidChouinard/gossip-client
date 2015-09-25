@@ -12,22 +12,17 @@ import time
 import retrying
 
 import RPi.GPIO as GPIO
-import alsaaudio
-import wave
 
 import neopixel
 import gaugette.rotary_encoder
 
 import networking
 import server
+import audio
 
 from setproctitle import setproctitle
 
 # CONSTANTS
-
-RATE = 44100/2
-
-BUFFER_SIZE = 30;  # in seconds
 
 MAIN_BUTTON_PIN = 21
 UNDO_BUTTON_PIN = 5
@@ -52,8 +47,6 @@ COLOR = neopixel.Color(255, 128, 8)
 strip = neopixel.Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS)
 
 # SETUP
-
-buffer = []
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(MAIN_BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
@@ -83,6 +76,8 @@ def main():
 
     setproctitle("recap")
 
+    GPIO.output(UNDO_LED_PIN, False)
+
     # Startup animation
     strip.begin()
     theaterChaseAnimation()
@@ -96,41 +91,23 @@ def main():
     th.daemon = True
     th.start()
 
-    GPIO.output(UNDO_LED_PIN, False)
+    th = threading.Thread(target=audio.start_recording)
+    th.daemon = True
+    th.start()
 
     encoder = gaugette.rotary_encoder.RotaryEncoder.Worker(ROTARY_A_PIN, ROTARY_B_PIN)
     encoder.start()
-
-    mixer = alsaaudio.Mixer(control="Mic")
-    mixer.setvolume(90, 0, alsaaudio.PCM_CAPTURE)
-
-    inp = alsaaudio.PCM(alsaaudio.PCM_CAPTURE, alsaaudio.PCM_NONBLOCK)
-
-    inp.setchannels(1)
-    inp.setrate(RATE)
-    inp.setformat(alsaaudio.PCM_FORMAT_S16_LE)
-    inp.setperiodsize(160)
-
-    print("* starting recording")
 
     start = time.time()
     last_button_press = 0
 
     try:
         while True:
-            if (len(buffer) > int(RATE / 920 * BUFFER_SIZE)):
-                buffer.pop(0);
-
-            l, data = inp.read()
-
-            if l > 0:
-                buffer.append(data)
-
             if not GPIO.input(MAIN_BUTTON_PIN) and time.clock() - last_button_press > 0.1:
                 print("* button pressed")
 
                 last_button_press = time.clock()
-                snapshot = b''.join(buffer)
+                snapshot = audio.get_buffer()
 
                 threading.Thread(target=theaterChaseAnimation).start()
                 threading.Thread(target=do_button_press_actions, args=(snapshot,)).start()
@@ -192,7 +169,7 @@ def button_released():
     button_press_start = time.time()
     print("* saving buffer")
 
-    snapshot = b''.join(buffer)
+    snapshot = audio.get_buffer()
 
     time_marker_start = 1
     time_marker_size = 6
@@ -215,7 +192,7 @@ def do_button_press_actions(snapshot):
         if not GPIO.input(UNDO_BUTTON_PIN):
             print("* undo buffer catpure")
             GPIO.output(UNDO_LED_PIN, False)
-            buffer = []  # flush buffer
+            audio.clear_buffer()
             return  # undo button was pressed, don't save snippet
 
         if times < 95:
