@@ -86,7 +86,6 @@ def main():
     # Startup animation
     strip.begin()
     theaterChaseAnimation()
-    #theaterChaseAnimation(exit=False)
     #threading.Thread(target=bootupAnimation).start()
 
     th = threading.Thread(target=networking.start_device_discovery)
@@ -105,7 +104,7 @@ def main():
     mixer = alsaaudio.Mixer(control="Mic")
     mixer.setvolume(90, 0, alsaaudio.PCM_CAPTURE)
 
-    inp = alsaaudio.PCM(alsaaudio.PCM_CAPTURE)
+    inp = alsaaudio.PCM(alsaaudio.PCM_CAPTURE, alsaaudio.PCM_NONBLOCK)
 
     inp.setchannels(1)
     inp.setrate(RATE)
@@ -120,12 +119,11 @@ def main():
     try:
         while True:
             if (len(buffer) > int(RATE / 920 * BUFFER_SIZE)):
-                # print time.time() - start
                 buffer.pop(0);
 
             l, data = inp.read()
 
-            if l:
+            if l > 0:
                 buffer.append(data)
 
             if not GPIO.input(MAIN_BUTTON_PIN) and time.clock() - last_button_press > 0.1:
@@ -257,12 +255,11 @@ def upload_snippet(payload):
     print("* uploaded snippet")
 
 def updateStrip():
-    #print str(time_marker_start) + "-" + str(time_marker_size)
     for n in range(0, strip.numPixels()):
         if n >= time_marker_start and n < time_marker_start + time_marker_size:
-		    strip.setPixelColor(n, COLOR)
+            strip.setPixelColor(n, COLOR)
         else:
-		    strip.setPixelColor(n, 0)
+            strip.setPixelColor(n, 0)
 
     strip.show()
 
@@ -298,17 +295,16 @@ def wheel(pos):
         return neopixel.Color(0, pos * 3, 255 - pos * 3)
 
 def theaterChaseAnimation(wait_ms=50, iterations=5):
-	"""Movie theater light style chaser animation."""
-	for j in range(iterations):
-		for q in range(3):
-			for i in range(0, strip.numPixels(), 3):
-				strip.setPixelColor(i+q, COLOR)
-			strip.show()
-			time.sleep(wait_ms/1000.0)
-			for i in range(0, strip.numPixels(), 3):
-				strip.setPixelColor(i+q, 0)
+    for j in range(iterations):
+        for q in range(3):
+            for i in range(0, strip.numPixels(), 3):
+                strip.setPixelColor(i+q, COLOR)
+            strip.show()
+            time.sleep(wait_ms/1000.0)
+            for i in range(0, strip.numPixels(), 3):
+                strip.setPixelColor(i+q, 0)
 
-	eraseStrip()
+    eraseStrip()
 
 def fadeoutStrip(iterations=5):
     colors = [strip.getPixelColor(n) for n in range(strip.numPixels())]
