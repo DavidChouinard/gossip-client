@@ -29,6 +29,9 @@ def start_recording():
         if l > 0:
             buffer.append(data)
 
+def get_framerate():
+    return RATE
+
 def clear_buffer():
     buffer = []  # flush buffer
 

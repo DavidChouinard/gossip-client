@@ -184,7 +184,7 @@ def do_button_press_actions(snapshot):
     wf = wave.open(virtual_file, 'wb')
     wf.setnchannels(1)
     wf.setsampwidth(2)
-    wf.setframerate(RATE)
+    wf.setframerate(audio.get_framerate())
     wf.writeframes(snapshot)
     wf.close()
 
