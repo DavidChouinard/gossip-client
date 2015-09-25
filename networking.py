@@ -16,7 +16,7 @@ import netaddr
 import nmap
 from scapy.all import sniff, Dot11
 
-RSSI_THRESHOLD = -60
+RSSI_THRESHOLD = int(os.environ.get("RSSI_THRESHOLD", -60))
 DEVNULL = open(os.devnull, 'wb')
 
 db = tinydb.TinyDB('db/db.json')
