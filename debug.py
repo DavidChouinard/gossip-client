@@ -1,15 +1,17 @@
-import networking
+#import networking
 
 import sys
+import time
 import tinydb
 
 from pprint import pprint
 
+db = tinydb.TinyDB('db/db.json')
+
 def main():
     if len(sys.argv) == 1 or sys.argv[1] == "proximity":
-        pprint(networking.devices_in_proximity())
+        pprint(db.search(tinydb.where('seen') >= int(time.time()) - 60*15))
     elif sys.argv[1] == "hostnames":
-        db = tinydb.TinyDB('db/db.json')
         pprint(db.search(tinydb.where('hostname')))
     else:
         print("Unknown debug command")
