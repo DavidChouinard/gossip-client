@@ -108,6 +108,6 @@ def start_server():
     print("* starting server")
 
     if os.environ.get("RECAP_ENV") == "PRODUCTION":
-        bottle.run(host='0.0.0.0', port=80, server='cherrypy', quiet=True, debug=False)
+        bottle.run(host='0.0.0.0', port=80, server='tornado', quiet=True, debug=False)
     else:
-        bottle.run(host='0.0.0.0', port=80, server='cherrypy', debug=True)
+        bottle.run(host='0.0.0.0', port=80, server='tornado', debug=True)
