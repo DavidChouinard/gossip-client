@@ -104,10 +104,10 @@ def main():
 
     try:
         while True:
-            if not GPIO.input(MAIN_BUTTON_PIN) and time.clock() - last_button_press > 0.1:
+            if not GPIO.input(MAIN_BUTTON_PIN) and time.time() - last_button_press > 0.1:
                 print("* button pressed")
 
-                last_button_press = time.clock()
+                last_button_press = time.time()
                 snapshot = audio.get_buffer()
 
                 threading.Thread(target=theaterChaseAnimation).start()
