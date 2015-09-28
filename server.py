@@ -107,7 +107,7 @@ bottle.Jinja2Template.defaults['format_date'] = format_date
 def start_server():
     print("* starting server")
 
-    if "RECAP_ENV" in os.environ and os.environ["RECAP_ENV"] == "PRODUCTION":
+    if os.environ.get("RECAP_ENV") == "PRODUCTION":
         bottle.run(host='0.0.0.0', port=80, server='cherrypy', quiet=True, debug=False)
     else:
         bottle.run(host='0.0.0.0', port=80, server='cherrypy', debug=True)

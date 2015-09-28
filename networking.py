@@ -16,9 +16,7 @@ import netaddr
 import nmap
 from scapy.all import sniff, Dot11
 
-from pprint import pprint
-
-RSSI_THRESHOLD = -60
+RSSI_THRESHOLD = int(os.environ.get("RSSI_THRESHOLD", -60))
 DEVNULL = open(os.devnull, 'wb')
 
 db = tinydb.TinyDB('db/db.json')
@@ -70,7 +68,10 @@ def packet_sniffed(pkt):
         rssi = (ord(pkt.notdecoded[-4:-3])-256)
         if mac not in my_mac and rssi >= RSSI_THRESHOLD:
             data = {'rssi': rssi, 'mac': mac, 'seen': int(time.time())}
-            print ("* captured probe: " + str(data))
+
+            if not os.environ.get("RECAP_ENV") == "PRODUCTION":
+                print ("* captured probe: " + str(data))
+
             insert_or_update_device(data)
 
 def scan_network(interface):
@@ -94,7 +95,9 @@ def scan_network(interface):
         hostname = get_hostname(nm[host]['addresses']['ipv4'], nm[host]['hostnames'])
         if hostname is not None:
             data["hostname"] = hostname
-            print("* found hostname " + str(data))
+
+            if not os.environ.get("RECAP_ENV") == "PRODUCTION":
+                print("* found hostname " + str(data))
 
         insert_or_update_device(data)
 

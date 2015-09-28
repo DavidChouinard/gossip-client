@@ -37,7 +37,7 @@ h4 {
 footer {
   font-size: 12px;
   text-align: center;
-  margin-top: 40px;
+  margin-top: 25px;
   color: #666;
 }
 
@@ -96,6 +96,27 @@ select:focus {
 
 
 /*
+ * Template additions
+ */
+
+form {
+  margin-bottom: 0;
+}
+
+button.button-small,
+input[type="submit"].button-small,
+input[type="reset"].button-small,
+input[type="button"].button-small {
+  height: 30px;
+  line-height: 29px;
+  font-size: 10px;
+  padding: 0 12px;
+  font-weight: 600;
+  margin-bottom: 0;
+}
+
+
+/*
  * Content
  */
 
@@ -114,7 +135,7 @@ select:focus {
   background-color: #fff;
   border: 1px solid #D1D1D1;
   cursor: pointer;
-  transition: all 0.5s ease-out;
+  /*transition: all 0.5s ease-out;*/
 }
 .list-group-item.active,
 .list-group-item:focus,
@@ -157,10 +178,14 @@ select:focus {
   width: 100%;
 }
 
-.list-group-item:not(.active) .list-group-item-text {
+.list-group-item:not(.active) .list-group-item-autowrap {
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
+}
+
+.list-group-item:not(.active) .list-group-item-form {
+  display: none;
 }
 
 .list-group-item-subtext {
@@ -168,11 +193,23 @@ select:focus {
   padding-left: 1px;
   font-weight: 300;
   line-height: 1.1rem;
-  padding-bottom: 8px;
+  margin-bottom: 2px;
+}
+
+.list-group-item-status {
+  float: right;
+  margin-top: 4px;
+}
+
+.list-group-item-status img,
+.list-group-item-status svg {
+  width: 16px;
+  height: 16px;
 }
 
 .list-group-item-wave {
   height: 40px;
+  margin-top: 8px;
 }
 .list-group-item-wave > wave > canvas {
   background: white;
@@ -188,6 +225,31 @@ select:focus {
   margin-left: calc(50% - 14px);
 }
 
+.list-group-item-form input[type="email"] {
+  margin: 8px 0 8px;
+}
+
+.list-group-item-form input[type="submit"],
+.list-group-item-form input[type="reset"],
+.list-group-item-form input[type="button"],
+.list-group-item-form button {
+  text-align: right;
+}
+
+.list-group-item-form-actions {
+  text-align: right;
+}
+
+.list-group-item-form-actions-optin {
+  float: left;
+  margin: 6px 0 0;
+}
+
+.list-group-item-form-actions-optin > .label-body {
+  font-size: 12px;
+  margin-left: 2px;
+}
+
 .warning-lock {
   padding-top: 6px;
   font-size: 1.2rem;
@@ -200,6 +262,11 @@ select:focus {
   padding-right: 2px;
   vertical-align: middle;
   fill: #666;
+}
+
+
+.register {
+  margin-bottom: 40px;
 }
 
 .register-prompt h2 {
@@ -257,11 +324,6 @@ select:focus {
   background-color: #f2dede;
 }
 
-/*.form-register {*/
-  /*max-width: 330px;*/
-  /*padding: 15px;*/
-  /*margin: 0 auto;*/
-/*}*/
 .form-register button {
   padding: 0 50px;
   display: block;

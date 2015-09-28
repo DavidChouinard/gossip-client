@@ -12,7 +12,6 @@ import time
 import retrying
 
 import RPi.GPIO as GPIO
-import alsaaudio
 import wave
 
 import neopixel
@@ -20,14 +19,11 @@ import gaugette.rotary_encoder
 
 import networking
 import server
+import audio
 
 from setproctitle import setproctitle
 
 # CONSTANTS
-
-RATE = 44100/2
-
-BUFFER_SIZE = 30;  # in seconds
 
 MAIN_BUTTON_PIN = 21
 UNDO_BUTTON_PIN = 5
@@ -52,8 +48,6 @@ COLOR = neopixel.Color(255, 128, 8)
 strip = neopixel.Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS)
 
 # SETUP
-
-buffer = []
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(MAIN_BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
@@ -83,10 +77,11 @@ def main():
 
     setproctitle("recap")
 
+    GPIO.output(UNDO_LED_PIN, False)
+
     # Startup animation
     strip.begin()
     theaterChaseAnimation()
-    #theaterChaseAnimation(exit=False)
     #threading.Thread(target=bootupAnimation).start()
 
     th = threading.Thread(target=networking.start_device_discovery)
@@ -97,53 +92,42 @@ def main():
     th.daemon = True
     th.start()
 
-    GPIO.output(UNDO_LED_PIN, False)
+    th = threading.Thread(target=audio.start_recording)
+    th.daemon = True
+    th.start()
 
     encoder = gaugette.rotary_encoder.RotaryEncoder.Worker(ROTARY_A_PIN, ROTARY_B_PIN)
     encoder.start()
 
-    mixer = alsaaudio.Mixer(control="Mic")
-    mixer.setvolume(90, 0, alsaaudio.PCM_CAPTURE)
-
-    inp = alsaaudio.PCM(alsaaudio.PCM_CAPTURE)
-
-    inp.setchannels(1)
-    inp.setrate(RATE)
-    inp.setformat(alsaaudio.PCM_FORMAT_S16_LE)
-    inp.setperiodsize(160)
-
-    print("* starting recording")
-
     start = time.time()
     last_button_press = 0
-    while True:
-        if (len(buffer) > int(RATE / 920 * BUFFER_SIZE)):
-            # print time.time() - start
-            buffer.pop(0);
 
-        l, data = inp.read()
+    try:
+        while True:
+            if not GPIO.input(MAIN_BUTTON_PIN) and time.clock() - last_button_press > 0.1:
+                print("* button pressed")
 
-        if l:
-            buffer.append(data)
+                last_button_press = time.clock()
+                snapshot = audio.get_buffer()
 
-        if not GPIO.input(MAIN_BUTTON_PIN) and time.clock() - last_button_press > 0.1:
-            print("* button pressed")
+                threading.Thread(target=theaterChaseAnimation).start()
+                threading.Thread(target=do_button_press_actions, args=(snapshot,)).start()
 
-            last_button_press = time.clock()
-            snapshot = b''.join(buffer)
+            time.sleep(0.1)
 
-            threading.Thread(target=theaterChaseAnimation).start()
-            threading.Thread(target=do_button_press_actions, args=(snapshot,)).start()
-
-        #delta = encoder.get_delta()
-        #if delta != 0 and GPIO.input(MAIN_BUTTON_PIN):
-        #    if time_marker_start + time_marker_size + delta > LED_COUNT:
-        #        time_marker_start = LED_COUNT - time_marker_size
-        #    elif time_marker_start + delta < 0:
-        #        time_marker_start = 0
-        #    else:
-        #        time_marker_start += delta
-        #    updateStrip()
+            #delta = encoder.get_delta()
+            #if delta != 0 and GPIO.input(MAIN_BUTTON_PIN):
+            #    if time_marker_start + time_marker_size + delta > LED_COUNT:
+            #        time_marker_start = LED_COUNT - time_marker_size
+            #    elif time_marker_start + delta < 0:
+            #        time_marker_start = 0
+            #    else:
+            #        time_marker_start += delta
+            #    updateStrip()
+    except (KeyboardInterrupt, SystemExit):
+        raise
+    except Exception as e:
+        sys.stderr.write(str(e))
 
     stream.stop_stream()
     stream.close()
@@ -186,7 +170,7 @@ def button_released():
     button_press_start = time.time()
     print("* saving buffer")
 
-    snapshot = b''.join(buffer)
+    snapshot = audio.get_buffer()
 
     time_marker_start = 1
     time_marker_size = 6
@@ -200,7 +184,7 @@ def do_button_press_actions(snapshot):
     wf = wave.open(virtual_file, 'wb')
     wf.setnchannels(1)
     wf.setsampwidth(2)
-    wf.setframerate(RATE)
+    wf.setframerate(audio.get_framerate())
     wf.writeframes(snapshot)
     wf.close()
 
@@ -209,7 +193,7 @@ def do_button_press_actions(snapshot):
         if not GPIO.input(UNDO_BUTTON_PIN):
             print("* undo buffer catpure")
             GPIO.output(UNDO_LED_PIN, False)
-            buffer = []  # flush buffer
+            audio.clear_buffer()
             return  # undo button was pressed, don't save snippet
 
         if times < 95:
@@ -249,12 +233,11 @@ def upload_snippet(payload):
     print("* uploaded snippet")
 
 def updateStrip():
-    #print str(time_marker_start) + "-" + str(time_marker_size)
     for n in range(0, strip.numPixels()):
         if n >= time_marker_start and n < time_marker_start + time_marker_size:
-		    strip.setPixelColor(n, COLOR)
+            strip.setPixelColor(n, COLOR)
         else:
-		    strip.setPixelColor(n, 0)
+            strip.setPixelColor(n, 0)
 
     strip.show()
 
@@ -290,17 +273,16 @@ def wheel(pos):
         return neopixel.Color(0, pos * 3, 255 - pos * 3)
 
 def theaterChaseAnimation(wait_ms=50, iterations=5):
-	"""Movie theater light style chaser animation."""
-	for j in range(iterations):
-		for q in range(3):
-			for i in range(0, strip.numPixels(), 3):
-				strip.setPixelColor(i+q, COLOR)
-			strip.show()
-			time.sleep(wait_ms/1000.0)
-			for i in range(0, strip.numPixels(), 3):
-				strip.setPixelColor(i+q, 0)
+    for j in range(iterations):
+        for q in range(3):
+            for i in range(0, strip.numPixels(), 3):
+                strip.setPixelColor(i+q, COLOR)
+            strip.show()
+            time.sleep(wait_ms/1000.0)
+            for i in range(0, strip.numPixels(), 3):
+                strip.setPixelColor(i+q, 0)
 
-	eraseStrip()
+    eraseStrip()
 
 def fadeoutStrip(iterations=5):
     colors = [strip.getPixelColor(n) for n in range(strip.numPixels())]
