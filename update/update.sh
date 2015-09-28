@@ -13,7 +13,7 @@ then
 
         git merge FETCH_HEAD
 
-        apt-get update && apt-get upgrade
+        apt-get update && apt-get upgrade -y
 
         echo "---> installing new required system packages"
 

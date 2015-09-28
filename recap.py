@@ -104,7 +104,7 @@ def main():
 
     try:
         while True:
-            if not GPIO.input(MAIN_BUTTON_PIN) and time.time() - last_button_press > 0.1:
+            if not GPIO.input(MAIN_BUTTON_PIN) and time.time() - last_button_press > 0.2:
                 print("* button pressed")
 
                 last_button_press = time.time()
