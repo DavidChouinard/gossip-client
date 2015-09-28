@@ -11,7 +11,8 @@ def start_recording():
     mixer = alsaaudio.Mixer(control="Mic")
     mixer.setvolume(90, 0, alsaaudio.PCM_CAPTURE)
 
-    inp = alsaaudio.PCM(alsaaudio.PCM_CAPTURE, alsaaudio.PCM_NONBLOCK)
+    #inp = alsaaudio.PCM(alsaaudio.PCM_CAPTURE, alsaaudio.PCM_NONBLOCK)
+    inp = alsaaudio.PCM(alsaaudio.PCM_CAPTURE)
 
     inp.setchannels(1)
     inp.setrate(RATE)
